@@ -23,7 +23,7 @@ final case class StudentActionsMongoDB(mongoDb: MongoDatabase)(implicit ec: Exec
       .recover(_ => None)
   }
 
-  def modifyStudentFields(studentId: Id, kv: List[(String, AnyVal)]): Future[Unit] = {
+  def modifyStudentFields(studentId: Id, kv: List[(String, Any)]): Future[Unit] = {
     val updates = kv.foldLeft(Updates.combine()) { case (acc, (k, v)) =>
       Updates.combine(acc, Updates.set(k, v))
     }

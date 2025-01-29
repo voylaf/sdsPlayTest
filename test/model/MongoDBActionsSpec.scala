@@ -39,6 +39,41 @@ class MongoDBActionsSpec extends munit.FunSuite {
     assert(student1.nonEmpty, "DB doesn't have the added student")
     assert(student1.get == students.head, "The added student must be the same after reading")
     assert(student2Lack.isEmpty, "DB has the student, which wasn't added")
+
+    val student2 = Await.result(
+      for {
+        _       <- studentActions.addStudent(students(1))
+        student <- studentActions.findStudentById(students(1)._id)
+      } yield student,
+      5.seconds
+    ).get
+    Await.result(studentActions.deleteStudent(student2), 5.seconds)
+    val student2Lack2 = Await.result(studentActions.findStudentById(students(1)._id), 5.seconds)
+    assert(student2Lack2.isEmpty, "DB has the student, which was deleted")
+
+    val changes = List(("group", "u99"), ("avgRate", 3.67))
+    val student3 = Await.result(
+      for {
+        _       <- studentActions.modifyStudentFields(students.head._id, changes)
+        student <- studentActions.findStudentById(students.head._id)
+      } yield student,
+      5.seconds
+    )
+    assert(student3.nonEmpty, "DB must have the changed student")
+    val student3Changed = students.head.copy(group = "u99", avgRate = 3.67)
+    assert(student3.get == student3Changed, "DB must see update")
+
+    val studentForReplace = student3Changed.copy(avgRate = 4.12, surname = "Przybyszewski")
+    val student4 = Await.result(
+      for {
+        _       <- studentActions.replaceStudent(studentForReplace)
+        student <- studentActions.findStudentById(studentForReplace._id)
+      } yield student,
+      5.seconds
+    )
+    assert(student4.nonEmpty, "DB must have the replaced student")
+    assert(student4.get == studentForReplace, "DB must see replace")
+
   }
 
 }

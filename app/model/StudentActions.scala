@@ -7,7 +7,7 @@ trait StudentActions[F[_]] {
 
   def replaceStudent(student: Student): F[Unit]
 
-  def modifyStudentFields(studentId: Id, kv: List[(String, AnyVal)]): F[Unit]
+  def modifyStudentFields(studentId: Id, kv: List[(String, Any)]): F[Unit]
 
   def addStudent(student: Student): F[Unit]
 

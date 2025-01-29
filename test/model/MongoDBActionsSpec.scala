@@ -26,7 +26,7 @@ class MongoDBActionsSpec extends munit.FunSuite {
     val returnedDb = Await.result(mongoDBActions.getDatabase(dbName), 5.seconds)
     Await.result(mongoDBActions.createCollection("Students", returnedDb), 5.seconds)
 
-    val studentActions = StudentActionsMongoDB(database)
+    val studentActions = StudentActionsMongoDB(database, "Students")
 
     val student1 = Await.result(
       for {

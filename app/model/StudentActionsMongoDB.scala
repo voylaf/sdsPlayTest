@@ -7,9 +7,9 @@ import org.mongodb.scala.model.Filters.equal
 
 import scala.concurrent.{ExecutionContext, Future}
 
-final case class StudentActionsMongoDB(mongoDb: MongoDatabase)(implicit ec: ExecutionContext) extends StudentActions[Future] {
+final case class StudentActionsMongoDB(mongoDb: MongoDatabase, collectionName: String)(implicit ec: ExecutionContext) extends StudentActions[Future] {
   def getStudentsCollection: Future[MongoCollection[Student]] =
-    Future(mongoDb.getCollection("Students"))
+    Future(mongoDb.getCollection(collectionName))
 
   def getStudentsList: Future[Seq[Student]] =
     getStudentsCollection.flatMap(_.find().toFuture())

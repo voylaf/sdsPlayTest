@@ -38,7 +38,7 @@ class HomeController @Inject() (val controllerComponents: ControllerComponents)(
     val studentsFuture = for {
       mongoDatabase <- mongoDBActions.getDatabase(mongoDatabaseName)
       students      <- StudentActionsMongoDB(mongoDb = mongoDatabase, collectionName = config.get[String]("mongoCollection")).getStudentsList
-    } yield Ok(students.map(_.surname).mkString(", "))
+    } yield Ok(students.mkString("\r\n"))
     studentsFuture.recover(e => InternalServerError(e.getStackTrace.mkString("\n")))
   }
 }

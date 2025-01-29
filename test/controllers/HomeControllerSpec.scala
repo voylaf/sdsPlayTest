@@ -48,7 +48,6 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
     "return students" in {
       val controller = inject[HomeController]
       val home = controller.getStudentsList.apply(FakeRequest(GET, "/get_students"))
-      println(contentAsString(home))
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/plain")

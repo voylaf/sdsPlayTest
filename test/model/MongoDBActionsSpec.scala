@@ -60,10 +60,10 @@ class MongoDBActionsSpec extends munit.FunSuite {
       5.seconds
     )
     assert(student3.nonEmpty, "DB must have the changed student")
-    val student3Changed = students.head.copy(group = "u99", avgRate = 3.67)
+    val student3Changed = students.head.copy(group = "u99", avgScore = 3.67)
     assert(student3.get == student3Changed, "DB must see update")
 
-    val studentForReplace = student3Changed.copy(avgRate = 4.12, surname = "Przybyszewski")
+    val studentForReplace = student3Changed.copy(avgScore = 4.12, surname = "Przybyszewski")
     val student4 = Await.result(
       for {
         _       <- studentActions.replaceStudent(studentForReplace)

@@ -1,19 +1,12 @@
 package model
 
-import org.mongodb.scala.{ConnectionString, MongoClient, MongoClientSettings}
-
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.DurationInt
 
 class MongoDBActionsSpec extends munit.FunSuite {
   val connectionString = "mongodb://localhost:27017"
-  val settings: MongoClientSettings = MongoClientSettings
-    .builder()
-    .applyConnectionString(ConnectionString(connectionString))
-    .build()
-  val mongoClient: MongoClient       = MongoClient(settings)
-  val mongoDBActions: MongoDBActions = MongoDBActions(mongoClient)
+  val mongoDBActions: MongoDBActions = MongoDBActions.fromConnectionString(connectionString)
 
   val students: List[Student] = List(
     Student("Ivanov", "Petr", "Alexandrovich", "u98", 3.21),
@@ -51,7 +44,7 @@ class MongoDBActionsSpec extends munit.FunSuite {
     val student2Lack2 = Await.result(studentActions.findStudentById(students(1)._id), 5.seconds)
     assert(student2Lack2.isEmpty, "DB has the student, which was deleted")
 
-    val changes = List(("group", "u99"), ("avgRate", 3.67))
+    val changes = List(("group", "u99"), ("avgScore", 3.67))
     val student3 = Await.result(
       for {
         _       <- studentActions.modifyStudentFields(students.head._id, changes)

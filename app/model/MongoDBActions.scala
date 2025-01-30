@@ -16,12 +16,10 @@ final case class MongoDBActions(mongoClient: MongoClient) extends DBActions[Futu
   )
 
   def createDatabase(dbName: String): Future[MongoDatabase] =
-    Future(mongoClient.getDatabase(dbName))
-      .map(_.withCodecRegistry(codecRegistry))
+    Future(mongoClient.getDatabase(dbName).withCodecRegistry(codecRegistry))
 
   def getDatabase(dbName: String): Future[MongoDatabase] =
-    Future(mongoClient.getDatabase(dbName))
-      .map(_.withCodecRegistry(codecRegistry))
+    Future(mongoClient.getDatabase(dbName).withCodecRegistry(codecRegistry))
 
   def createCollection(collectionName: String, mongoDatabase: MongoDatabase): Future[Unit] =
     mongoDatabase.createCollection(collectionName).toFuture()
@@ -35,7 +33,7 @@ object MongoDBActions {
       .builder()
       .applyConnectionString(ConnectionString(connectionString))
       .build()
-    val mongoClient: MongoClient       = MongoClient(settings)
+    val mongoClient: MongoClient = MongoClient(settings)
     MongoDBActions(mongoClient)
   }
 }

@@ -1,14 +1,18 @@
 package controllers
 
-import model.{MongoDBActions, StudentActionsMongoDB}
+import model.{MongoDBActions, Student, StudentActionsMongoDB}
 import org.mongodb.scala.MongoDatabase
 
 import javax.inject._
 import play.api._
+import play.api.libs.json.JsValue
 import play.api.mvc._
 import play.filters.csrf.CSRF.Token
+import play.api.libs.json._
+import model.StudentImpl._
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 /** This controller creates an `Action` to handle HTTP requests to the application's home page.
   */
@@ -17,9 +21,10 @@ class HomeController @Inject() (val controllerComponents: ControllerComponents)(
 
   /** Create an Action to render an HTML page.
     *
-    * The configuration in the `routes` file means that this method will be called when the application receives a `GET` request with a path of `/`.
+    * The configuration in the `routes` file means that this method will be called when the application receives a `GET` request with a path
+    * of `/`.
     */
-  def index() = Action { implicit request: Request[AnyContent] =>
+  def index(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.index())
   }
 
@@ -34,11 +39,26 @@ class HomeController @Inject() (val controllerComponents: ControllerComponents)(
    */
   private val mongoDatabaseName           = config.get[String]("mongoDatabase")
   lazy val mongoDBActions: MongoDBActions = MongoDBActions.fromConnectionString(config.get[String]("mongoConnectionString"))
-  def getStudentsList = Action.async { implicit request: Request[AnyContent] =>
+  def getStudentsList: Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
     val studentsFuture = for {
       mongoDatabase <- mongoDBActions.getDatabase(mongoDatabaseName)
-      students      <- StudentActionsMongoDB(mongoDb = mongoDatabase, collectionName = config.get[String]("mongoCollection")).getStudentsList
-    } yield Ok(students.mkString("\r\n"))
-    studentsFuture.recover(e => InternalServerError(e.getStackTrace.mkString("\n")))
+      students <- StudentActionsMongoDB(mongoDb = mongoDatabase, collectionName = config.get[String]("mongoCollection")).getStudentsList
+    } yield Ok(students.map(_.show).mkString("\r\n"))
+    studentsFuture.recover(e => InternalServerError(e.toString))
+  }
+
+  def addStudent(): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
+    val dbFuture = mongoDBActions.getDatabase(mongoDatabaseName)
+    println(Json.fromJson[Student](request.body.asJson.get))
+    val studentFuture = for {
+      student <- Future(Json.fromJson[Student](request.body.asJson.get).get)
+      db      <- dbFuture
+      _       <- StudentActionsMongoDB(db, config.get[String]("mongoCollection")).addStudent(student)
+    } yield student
+
+    studentFuture.flatMap(student => Future.successful(Ok(s"$student was added to the DB"))).recover {
+      case e => InternalServerError(e.toString)
+    }
+
   }
 }

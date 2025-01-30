@@ -11,3 +11,6 @@ GET     /assets/*file               controllers.Assets.versioned(path="/public",
 
 # Принимает запросы HTTP GET на получение списка объектов студентов
 GET     /get_students               controllers.HomeController.getStudentsList
+
+# Принимать запросы HTTP PUT на добавление новой сущности студента
+PUT     /add_student               controllers.HomeController.addStudent

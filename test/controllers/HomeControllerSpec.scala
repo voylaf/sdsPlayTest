@@ -1,11 +1,21 @@
 package controllers
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.typesafe.config.ConfigFactory
+import model.Student
+import model.StudentImpl._
+import org.bson.types.ObjectId
+import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
+import play.api.http.Status
+import play.api.libs.json.Json
 import play.api.{ConfigLoader, Configuration}
 import play.api.test._
 import play.api.test.Helpers._
+
+import scala.concurrent.Await
+import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 
 /**
  * Add your spec here.
@@ -51,7 +61,18 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/plain")
-      contentAsString(home) must include ("Ivanov")
+      contentAsString(home) must include ("Przybyszewski")
+    }
+
+    "return added student" in {
+      val student = Student("Vasilyev", "Alexey", "Ignatyevich", "a6", 4.5)
+      val studentJson = Json.toJson(student)
+      val controller = inject[HomeController]
+      val home = controller.addStudent().apply(FakeRequest(PUT, "/add_student").withJsonBody(studentJson))
+
+      status(home) mustBe OK
+      contentType(home) mustBe Some("text/plain")
+      contentAsString(home) must include (student._id.toString)
     }
   }
 }

@@ -13,4 +13,7 @@ GET     /assets/*file               controllers.Assets.versioned(path="/public",
 GET     /get_students               controllers.HomeController.getStudentsList
 
 # Принимать запросы HTTP PUT на добавление новой сущности студента
-PUT     /add_student               controllers.HomeController.addStudent
+PUT     /add_student               controllers.HomeController.addStudent()
+
+# Принимать запросы HTTP POST на изменения сущности объекта студента
+POST     /update_student_by_id/{id}               controllers.HomeController.updateStudent(id)

@@ -44,7 +44,7 @@ class MongoDBActionsSpec extends munit.FunSuite {
     val student2Lack2 = Await.result(studentActions.findStudentById(students(1)._id), 5.seconds)
     assert(student2Lack2.isEmpty, "DB has the student, which was deleted")
 
-    val changes = List(("group", "u99"), ("avgScore", 3.67))
+    val changes = StudentUpdate(group=Some("u99"), avgScore=Some(3.67))
     val student3 = Await.result(
       for {
         _       <- studentActions.modifyStudentFields(students.head._id, changes)

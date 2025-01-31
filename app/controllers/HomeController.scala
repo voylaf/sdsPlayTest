@@ -1,6 +1,6 @@
 package controllers
 
-import model.{MongoDBActions, Student, StudentActionsMongoDB}
+import model.{MongoDBActions, Student, StudentActionsMongoDB, StudentUpdate}
 import org.mongodb.scala.MongoDatabase
 
 import javax.inject._
@@ -10,6 +10,7 @@ import play.api.mvc._
 import play.filters.csrf.CSRF.Token
 import play.api.libs.json._
 import model.StudentImpl._
+import org.bson.types.ObjectId
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -44,21 +45,36 @@ class HomeController @Inject() (val controllerComponents: ControllerComponents)(
       mongoDatabase <- mongoDBActions.getDatabase(mongoDatabaseName)
       students <- StudentActionsMongoDB(mongoDb = mongoDatabase, collectionName = config.get[String]("mongoCollection")).getStudentsList
     } yield Ok(students.map(_.show).mkString("\r\n"))
-    studentsFuture.recover(e => InternalServerError(e.toString))
+    studentsFuture
+      .recover(e => InternalServerError(e.toString))
   }
 
   def addStudent(): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
     val dbFuture = mongoDBActions.getDatabase(mongoDatabaseName)
-    println(Json.fromJson[Student](request.body.asJson.get))
     val studentFuture = for {
       student <- Future(Json.fromJson[Student](request.body.asJson.get).get)
       db      <- dbFuture
       _       <- StudentActionsMongoDB(db, config.get[String]("mongoCollection")).addStudent(student)
     } yield student
 
-    studentFuture.flatMap(student => Future.successful(Ok(s"$student was added to the DB"))).recover {
-      case e => InternalServerError(e.toString)
-    }
+    studentFuture
+      .flatMap(student => Future.successful(Ok(s"$student was added to the DB")))
+      .recover {
+        case e => InternalServerError(e.toString)
+      }
+  }
 
+  def updateStudent(id: String): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
+    val dbFuture = mongoDBActions.getDatabase(mongoDatabaseName)
+    val updateFuture = for {
+      update <- Future(Json.fromJson[StudentUpdate](request.body.asJson.get).get)
+      db     <- dbFuture
+      _      <- StudentActionsMongoDB(db, config.get[String]("mongoCollection")).modifyStudentFields(new ObjectId(id), update)
+    } yield update
+    updateFuture
+      .flatMap(_ => Future.successful(Ok(s"Student with id=$id was successfully updated")))
+      .recover {
+        case e => InternalServerError(e.toString)
+      }
   }
 }

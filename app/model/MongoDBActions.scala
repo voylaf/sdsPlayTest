@@ -11,7 +11,7 @@ import scala.concurrent.Future
 final case class MongoDBActions(mongoClient: MongoClient) extends DBActions[Future, MongoDatabase] {
 
   private val codecRegistry = fromRegistries(
-    fromProviders(classOf[Student]),
+    fromProviders(classOf[Student], classOf[StudentUpdate]),
     DEFAULT_CODEC_REGISTRY
   )
 

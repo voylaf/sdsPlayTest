@@ -93,5 +93,23 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
       contentType(home) mustBe Some("text/plain")
       contentAsString(home) must include(studentOriginal._id.toString)
     }
+
+    "not return deleted student" in {
+      val studentOriginal = Student("Oderski", "Martin", "", "scala", 5.0)
+      val fakeId = "123456578"
+      val alreadyDeletedId = "679b47b874165f71f99cd35c"
+      val controller  = inject[HomeController]
+      val add         = controller.addStudent().apply(FakeRequest(PUT, "/add_student").withJsonBody(Json.toJson(studentOriginal)))
+      val home = add.flatMap(_ =>
+        controller
+          .deleteStudent(studentOriginal._id.toString)
+          .apply(FakeRequest(DELETE, s"/delete_student/${studentOriginal._id}")
+      ))
+      val home2 = home.flatMap(_ => controller.getStudentsList.apply(FakeRequest(GET, "/get_students")))
+      println(contentAsString(home))
+      status(home) mustBe OK
+      contentType(home) mustBe Some("text/plain")
+      contentAsString(home2) must not include studentOriginal._id.toString
+    }
   }
 }

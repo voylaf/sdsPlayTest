@@ -11,5 +11,5 @@ trait StudentActions[F[_]] {
 
   def addStudent(student: Student): F[Unit]
 
-  def deleteStudent(student: Student): F[Unit]
+  def deleteStudent(studentId: Id): F[String]
 }

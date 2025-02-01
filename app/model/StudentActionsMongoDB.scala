@@ -36,8 +36,10 @@ final case class StudentActionsMongoDB(mongoDb: MongoDatabase, collectionName: S
     getStudentsCollection.flatMap(_.insertOne(student).toFuture()).map(_ => ())
   }
 
-  def deleteStudent(student: Student): Future[Unit] =
-    getStudentsCollection.flatMap(_.deleteOne(equal("_id", student._id)).toFuture()).map(_ => ())
+  def deleteStudent(studentId: Id): Future[String] =
+    getStudentsCollection.flatMap(_.deleteOne(equal("_id", studentId)).toFuture()).map(dr =>
+      s"Deleted count: ${dr.getDeletedCount}"
+    )
 
   def replaceStudent(student: Student): Future[Unit] =
     getStudentsCollection.flatMap(

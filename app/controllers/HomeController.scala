@@ -77,4 +77,18 @@ class HomeController @Inject() (val controllerComponents: ControllerComponents)(
         case e => InternalServerError(e.toString)
       }
   }
+
+  def deleteStudent(id: String): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
+    val dbFuture = mongoDBActions.getDatabase(mongoDatabaseName)
+    val deleteFuture = for {
+      db     <- dbFuture
+      result <- StudentActionsMongoDB(db, config.get[String]("mongoCollection")).deleteStudent(new ObjectId(id))
+    } yield result
+    deleteFuture
+      .flatMap { message => Future.successful(Ok(message)) }
+      .recover {
+        case e: java.lang.IllegalArgumentException => UnprocessableEntity("Wrong id: " + e.getMessage)
+        case e                                     => InternalServerError(e.toString)
+      }
+  }
 }

@@ -40,7 +40,7 @@ class MongoDBActionsSpec extends munit.FunSuite {
       } yield student,
       5.seconds
     ).get
-    Await.result(studentActions.deleteStudent(student2), 5.seconds)
+    Await.result(studentActions.deleteStudent(student2._id), 5.seconds)
     val student2Lack2 = Await.result(studentActions.findStudentById(students(1)._id), 5.seconds)
     assert(student2Lack2.isEmpty, "DB has the student, which was deleted")
 

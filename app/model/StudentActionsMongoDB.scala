@@ -24,8 +24,8 @@ final case class StudentActionsMongoDB(mongoDb: MongoDatabase, collectionName: S
       .recover(_ => None)
   }
 
-  def modifyStudentFields(studentId: Id, kv: StudentUpdate): Future[Unit] = {
-    val us      = kv.updates.collect { case (k, v) if k != "_id" => Updates.set(k, v) }.toList
+  def modifyStudentFields(studentId: Id, su: StudentUpdate): Future[Unit] = {
+    val us      = su.updates.collect { case (k, v) if k != "_id" => Updates.set(k, v) }.toList
     val updates = Updates.combine(us: _*)
     getStudentsCollection.flatMap(col =>
       col.updateOne(equal("_id", studentId), updates).toFuture()

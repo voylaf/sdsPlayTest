@@ -4,6 +4,16 @@ import org.bson.types.ObjectId
 import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json.{Format, JsNumber, JsString, JsValue, Json, Reads, Writes}
 
+/*
+Состав объекта студента:
+1. Фамилия;
+2. Имя;
+3. Отчество;
+4. Группа;
+5. Средняя оценка;
+6. Ид объекта в БД
+Предполагается, что все поля, кроме ид, заполнены
+ */
 final case class Student(
     surname: String,
     name: String,
@@ -23,6 +33,9 @@ final case class StudentUpdate(
     avgScore: Option[Double] = None,
     _id: Option[ObjectId] = None
 ) {
+  /*
+  Обновление производится только по непустым полям, т.е. нет возможности записать None в БД
+   */
   val updates: Map[String, Any] = Map(
     "surname"  -> surname,
     "name"     -> name,
@@ -32,12 +45,14 @@ final case class StudentUpdate(
     "_id"      -> _id
   ).collect { case (k, Some(v)) => (k, v) }
   val updatesJson: Map[String, JsValueWrapper] = updates.map {
-    case (k, v: String) => (k, JsString(v))
-    case (k, v: Double) => (k, JsNumber(v))
+    case (k, v: String)   => (k, JsString(v))
+    case (k, v: Double)   => (k, JsNumber(v))
     case (k, v: ObjectId) => (k, JsString(v.toString))
   }
 }
-
+/*
+Имплиситы для сериализации/десериализации objectId, студентов и их апдейтов.
+ */
 object StudentImpl {
   import play.api.libs.json._
   implicit val objectIdFormat: Format[ObjectId] = Format(

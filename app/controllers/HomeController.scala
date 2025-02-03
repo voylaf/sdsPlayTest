@@ -40,6 +40,7 @@ class HomeController @Inject() (val controllerComponents: ControllerComponents)(
    */
   private val mongoDatabaseName           = config.get[String]("mongoDatabase")
   lazy val mongoDBActions: MongoDBActions = MongoDBActions.fromConnectionString(config.get[String]("mongoConnectionString"))
+//  2. Принимать запросы HTTP GET на получения списка объектов студентов;
   def getStudentsList: Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
     val studentsFuture = for {
       mongoDatabase <- mongoDBActions.getDatabase(mongoDatabaseName)
@@ -49,6 +50,7 @@ class HomeController @Inject() (val controllerComponents: ControllerComponents)(
       .recover(e => InternalServerError(e.toString))
   }
 
+//  3. Принимать запросы HTTP POST на изменения сущности объекта студента;
   def addStudent(): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
     val dbFuture = mongoDBActions.getDatabase(mongoDatabaseName)
     val studentFuture = for {
@@ -66,6 +68,7 @@ class HomeController @Inject() (val controllerComponents: ControllerComponents)(
       }
   }
 
+//  4. Принимать запросы HTTP PUT на добавление новой сущности студента;
   def updateStudent(id: String): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
     val dbFuture = mongoDBActions.getDatabase(mongoDatabaseName)
     val updateFuture = for {
@@ -74,12 +77,14 @@ class HomeController @Inject() (val controllerComponents: ControllerComponents)(
       _      <- StudentActionsMongoDB(db, config.get[String]("mongoCollection")).modifyStudentFields(new ObjectId(id), update)
     } yield update
     updateFuture
+      // todo: must return "wasn't updated" when student not found in the db
       .flatMap(_ => Future.successful(Ok(s"Student with id=$id was successfully updated")))
       .recover {
         case e => InternalServerError(e.toString)
       }
   }
 
+//  5. Принимать запросы HTTP DELETE на удаление объекта студента.
   def deleteStudent(id: String): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
     val dbFuture = mongoDBActions.getDatabase(mongoDatabaseName)
     val deleteFuture = for {

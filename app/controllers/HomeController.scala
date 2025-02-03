@@ -44,7 +44,7 @@ class HomeController @Inject() (val controllerComponents: ControllerComponents)(
     val studentsFuture = for {
       mongoDatabase <- mongoDBActions.getDatabase(mongoDatabaseName)
       students <- StudentActionsMongoDB(mongoDb = mongoDatabase, collectionName = config.get[String]("mongoCollection")).getStudentsList
-    } yield Ok(students.map(_.show).mkString("\r\n"))
+    } yield Ok("There are students in DB:\n" + students.map(_.show).mkString("\r\n"))
     studentsFuture
       .recover(e => InternalServerError(e.toString))
   }
@@ -60,6 +60,8 @@ class HomeController @Inject() (val controllerComponents: ControllerComponents)(
     studentFuture
       .flatMap(student => Future.successful(Ok(s"$student was added to the DB")))
       .recover {
+        case _: java.util.NoSuchElementException =>
+          InternalServerError(s"Invalid data - student must have surname, name, patronym, avgScore, and group: ${request.body}")
         case e => InternalServerError(e.toString)
       }
   }

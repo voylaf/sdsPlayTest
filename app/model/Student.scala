@@ -49,7 +49,7 @@ object StudentImpl {
     Writes[ObjectId]((o: ObjectId) => JsString(o.toHexString))
   )
 
-  implicit val studentFormat: Format[Student] = Json.format[Student]
+  implicit val studentFormat: Format[Student] = Json.using[Json.WithDefaultValues].format[Student]
 
   implicit val studentUpdateFormat: Format[StudentUpdate] = Format(
     Reads[StudentUpdate] {

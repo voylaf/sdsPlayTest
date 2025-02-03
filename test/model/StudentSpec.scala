@@ -10,16 +10,27 @@ class StudentSpec extends munit.FunSuite {
   test("student from json") {
     val student     = Student("Vasilyev", "Alexey", "Ignatyevich", "a6", 4.5)
     val studentJson = Json.toJson[Student](student)
-//    val studentWoId = Json.parse(
-//      """{
-//        |"surname":"Vasilyev",
-//        |"name":"Alexey",
-//        |"patronym":"Ignatyevich",
-//        |"group":"a6",
-//        |"avgScore":4.5,
-//        |"_id":"507f191e810c19729de860ea"}
-//        |""".stripMargin
-//    )
+    val studentWoIdJson = Json.parse(
+      """{
+        |"surname":"Vasilyev",
+        |"name":"Alexey",
+        |"patronym":"Ignatyevich",
+        |"group":"a6",
+        |"avgScore":4.5}
+        |""".stripMargin
+    )
+    val studentWoSurnameJson = Json.parse(
+      """{
+        |"name":"Alexey",
+        |"patronym":"Ignatyevich",
+        |"group":"a6",
+        |"avgScore":4.5}
+        |""".stripMargin
+    )
+    val studentWoId = Json.fromJson[Student](studentWoIdJson)
+    assert(studentWoId.isSuccess, s"student without id from json is failed $studentWoId")
+    val studentWoSurname = Json.fromJson[Student](studentWoSurnameJson)
+    assert(studentWoSurname.isError, s"student without surname from json must fail")
     val studentFromJsonRes = Json.fromJson[Student](studentJson)
     assert(studentFromJsonRes.isSuccess, s"from json is failed $studentFromJsonRes")
     assert(student == studentFromJsonRes.get, "students are not equal")
@@ -32,7 +43,8 @@ class StudentSpec extends munit.FunSuite {
     val studentFromJson = Json.fromJson[StudentUpdate](studentJson).get
     val studentFromJsonDouble =
       Json.fromJson[StudentUpdate](
-        Json.parse(s"""{"avgScore":4.12,"_id":"${studentOriginal._id}","surname":"Smirnov","group":"c61"}""")).get
+        Json.parse(s"""{"avgScore":4.12,"_id":"${studentOriginal._id}","surname":"Smirnov","group":"c61"}""")
+      ).get
     assert(student == studentFromJson, s"$student \n != \n $studentFromJson")
     assert(student == studentFromJsonDouble, s"$student \n != \n $studentFromJsonDouble")
   }

@@ -10,13 +10,13 @@ GET     /                           controllers.HomeController.index()
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
 
 # Принимает запросы HTTP GET на получение списка объектов студентов
-GET     /get_students               controllers.HomeController.getStudentsList
+GET     /students/get               controllers.HomeController.getStudentsList
 
 # Принимать запросы HTTP PUT на добавление новой сущности студента
-PUT     /add_student               controllers.HomeController.addStudent()
+PUT     /students/add               controllers.HomeController.addStudent()
 
 # Принимать запросы HTTP POST на изменения сущности объекта студента
-POST     /update_student_by_id               controllers.HomeController.updateStudent(id:String)
+POST     /students/update               controllers.HomeController.updateStudent(id:String)
 
 # Принимать запросы HTTP POST на изменения сущности объекта студента
-DELETE     /delete_by_id               controllers.HomeController.deleteStudent(id:String)
+DELETE     /students/delete               controllers.HomeController.deleteStudent(id:String)

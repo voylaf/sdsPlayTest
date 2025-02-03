@@ -16,7 +16,7 @@ GET     /get_students               controllers.HomeController.getStudentsList
 PUT     /add_student               controllers.HomeController.addStudent()
 
 # Принимать запросы HTTP POST на изменения сущности объекта студента
-POST     /update_student_by_id/:id               controllers.HomeController.updateStudent(id)
+POST     /update_student_by_id               controllers.HomeController.updateStudent(id:String)
 
 # Принимать запросы HTTP POST на изменения сущности объекта студента
-DELETE     /delete_by_id/:id               controllers.HomeController.deleteStudent(id)
+DELETE     /delete_by_id               controllers.HomeController.deleteStudent(id:String)

@@ -1,13 +1,11 @@
 package controllers
 
-import model.{MongoDBActions, Student, StudentActionsMongoDB, StudentUpdate}
-import org.mongodb.scala.MongoDatabase
+import model.{MongoDBActions, OAuth, Student, StudentActionsMongoDB, StudentUpdate}
 
 import javax.inject._
 import play.api._
 import play.api.libs.json.JsValue
 import play.api.mvc._
-import play.filters.csrf.CSRF.Token
 import play.api.libs.json._
 import model.StudentImpl._
 import org.bson.types.ObjectId

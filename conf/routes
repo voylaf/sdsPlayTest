@@ -15,9 +15,10 @@ PUT     /students/add               controllers.HomeController.addStudent()
 # Принимать запросы HTTP POST на изменения сущности объекта студента
 POST     /students/update               controllers.HomeController.updateStudent(id:String)
 
-# Принимать запросы HTTP POST на изменения сущности объекта студента
+# Принимать запросы HTTP DELETE на удаление объекта студента
 DELETE     /students/delete               controllers.HomeController.deleteStudent(id:String)
 
+# Производить авторизацию по протоколу OAuth2.0 и возвращать в ответ access_token
 GET /auth controllers.HomeController.authorize()
 
 GET /auth/callback controllers.HomeController.callback

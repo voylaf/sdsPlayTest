@@ -1,3 +1,5 @@
+curl --header "Content-Type:application/json" --request GET http://localhost:9000/auth
+
 curl --header "Content-Type:application/json" --request GET http://localhost:9000/get_students
 
 curl --header "Content-Type:application/json" --request PUT --data "{\"surname\":\"Smirnov\",\"name\":\"Sergey\",\"patronym\":\"Petrovich\",\"group\":\"c61\",\"avgScore\":4.12}" http://localhost:9000/add_student

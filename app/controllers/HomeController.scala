@@ -11,14 +11,18 @@ import play.filters.csrf.CSRF.Token
 import play.api.libs.json._
 import model.StudentImpl._
 import org.bson.types.ObjectId
+import play.api.libs.ws.WSClient
+import play.mvc.Call
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.Random.{alphanumeric, nextPrintableChar}
 
 /** This controller creates an `Action` to handle HTTP requests to the application's home page.
   */
 @Singleton
-class HomeController @Inject() (val controllerComponents: ControllerComponents)(config: Configuration) extends BaseController {
+class HomeController @Inject() (val controllerComponents: ControllerComponents)(config: Configuration)(ws: WSClient)
+    extends BaseController {
 
   /** Create an Action to render an HTML page.
     *
@@ -41,7 +45,7 @@ class HomeController @Inject() (val controllerComponents: ControllerComponents)(
   private val mongoDatabaseName           = config.get[String]("mongoDatabase")
   lazy val mongoDBActions: MongoDBActions = MongoDBActions.fromConnectionString(config.get[String]("mongoConnectionString"))
 //  2. Принимать запросы HTTP GET на получения списка объектов студентов;
-  def getStudentsList: Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
+  def getStudentsList: Action[AnyContent] = Action.async { implicit request =>
     val studentsFuture = for {
       mongoDatabase <- mongoDBActions.getDatabase(mongoDatabaseName)
       students <- StudentActionsMongoDB(mongoDb = mongoDatabase, collectionName = config.get[String]("mongoCollection")).getStudentsList
@@ -51,10 +55,10 @@ class HomeController @Inject() (val controllerComponents: ControllerComponents)(
   }
 
 //  3. Принимать запросы HTTP POST на изменения сущности объекта студента;
-  def addStudent(): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
+  def addStudent(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     val dbFuture = mongoDBActions.getDatabase(mongoDatabaseName)
     val studentFuture = for {
-      student <- Future(Json.fromJson[Student](request.body.asJson.get).get)
+      student <- Future(Json.fromJson[Student](request.body).get)
       db      <- dbFuture
       _       <- StudentActionsMongoDB(db, config.get[String]("mongoCollection")).addStudent(student)
     } yield student
@@ -69,10 +73,10 @@ class HomeController @Inject() (val controllerComponents: ControllerComponents)(
   }
 
 //  4. Принимать запросы HTTP PUT на добавление новой сущности студента;
-  def updateStudent(id: String): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
+  def updateStudent(id: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     val dbFuture = mongoDBActions.getDatabase(mongoDatabaseName)
     val updateFuture = for {
-      update <- Future(Json.fromJson[StudentUpdate](request.body.asJson.get).get)
+      update <- Future(Json.fromJson[StudentUpdate](request.body).get)
       db     <- dbFuture
       _      <- StudentActionsMongoDB(db, config.get[String]("mongoCollection")).modifyStudentFields(new ObjectId(id), update)
     } yield update
@@ -85,7 +89,7 @@ class HomeController @Inject() (val controllerComponents: ControllerComponents)(
   }
 
 //  5. Принимать запросы HTTP DELETE на удаление объекта студента.
-  def deleteStudent(id: String): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
+  def deleteStudent(id: String): Action[AnyContent] = Action.async { implicit request =>
     val dbFuture = mongoDBActions.getDatabase(mongoDatabaseName)
     val deleteFuture = for {
       db     <- dbFuture
@@ -97,5 +101,56 @@ class HomeController @Inject() (val controllerComponents: ControllerComponents)(
         case e: java.lang.IllegalArgumentException => UnprocessableEntity("Wrong id: " + e.getMessage)
         case e                                     => InternalServerError(e.toString)
       }
+  }
+
+  def authorizeUrl[A](returnTo: Call)(implicit request: Request[A]): String =
+    OAuth.makeUrl(
+      config.get[String]("authEndpoint"),
+      "response_type" -> "code",
+      "client_id"     -> config.get[String]("appClientId"),
+      "redirect_uri"  -> routes.HomeController.callback.absoluteURL(),
+      "state"         -> alphanumeric.take(20).mkString
+    )
+
+  val callback = Action.async { implicit request =>
+    request.getQueryString("code") match {
+      case Some(code) =>
+        val callbackUrl = routes.HomeController.callback.absoluteURL()
+        val data = Map(
+          "code"          -> Seq(code),
+          "client_id"     -> Seq(config.get[String]("appClientId")),
+          "client_secret" -> Seq(config.get[String]("appClientSecret")),
+          "redirect_uri"  -> Seq(callbackUrl),
+          "grant_type"    -> Seq("authorization_code")
+        )
+        for {
+          response <- ws.url(config.get[String]("tokenEndpoint"))
+            .withHttpHeaders(("Accept", "application/json"))
+            .post(data)
+        } yield {
+          (response.json \ "access_token").validate[String].fold(
+            _ => InternalServerError,
+            token =>
+              Ok(s"token=$token").addingToSession("tokenKey" -> token)
+          )
+        }
+      case None =>
+        Future.successful(InternalServerError)
+    }
+  }
+
+  def authenticated[A, B](f: String => A, g: => A)(implicit request: Request[B]): A = {
+    request.session.get("tokenKey") match {
+      case Some(token) => f(token)
+      case None        => g
+    }
+  }
+
+  def authorize(): Action[AnyContent] = Action { implicit request =>
+    authenticated(
+      token => Ok(s"token=$token"), {
+        Redirect(authorizeUrl(routes.HomeController.authorize()))
+      }
+    )
   }
 }

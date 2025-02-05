@@ -1,9 +1,6 @@
 package model
 
-import model.StudentImpl.studentFormat
-import model.StudentImpl.objectIdFormat
-import model.StudentImpl.studentUpdateFormat
-import org.bson.types.ObjectId
+import model.StudentImpl.{studentFormat, studentUpdateFormat}
 import play.api.libs.json._
 
 class StudentSpec extends munit.FunSuite {

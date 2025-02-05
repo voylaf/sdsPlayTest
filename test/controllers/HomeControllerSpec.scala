@@ -1,18 +1,16 @@
 package controllers
 
 import com.typesafe.config.ConfigFactory
-import model.{Student, StudentUpdate}
 import model.StudentImpl._
+import model.{Student, StudentUpdate}
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
-import play.api.libs.json.Json
 import play.api.Configuration
-import play.api.test._
+import play.api.libs.json.Json
 import play.api.test.Helpers._
+import play.api.test._
 
-import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 
 /** Add your spec here. You can mock out a whole application including requests, plugins etc.
   *

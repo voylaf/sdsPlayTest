@@ -1,9 +1,8 @@
 package model
 
-import org.mongodb.scala.{Document, MongoClient, MongoCollection, MongoDatabase}
-import org.mongodb.scala.ObservableImplicits
-import org.mongodb.scala.model.Updates
 import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.model.Updates
+import org.mongodb.scala.{MongoCollection, MongoDatabase}
 
 import scala.concurrent.{ExecutionContext, Future}
 

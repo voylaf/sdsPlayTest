@@ -1,20 +1,18 @@
 package controllers
 
-import model.{MongoDBActions, OAuth, Student, StudentActionsMongoDB, StudentUpdate}
-
-import javax.inject._
-import play.api._
-import play.api.libs.json.JsValue
-import play.api.mvc._
-import play.api.libs.json._
 import model.StudentImpl._
+import model._
 import org.bson.types.ObjectId
+import play.api._
+import play.api.libs.json._
 import play.api.libs.ws.WSClient
+import play.api.mvc._
 import play.mvc.Call
 
+import javax.inject._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.Random.{alphanumeric, nextPrintableChar}
+import scala.util.Random.alphanumeric
 
 /** This controller creates an `Action` to handle HTTP requests to the application's home page.
   */
@@ -145,11 +143,12 @@ class HomeController @Inject() (val controllerComponents: ControllerComponents)(
     }
   }
 
+  /* 1. Производить авторизацию по протоколу OAuth2.0 и возвращать в ответ access_token;
+   */
   def authorize(): Action[AnyContent] = Action { implicit request =>
     authenticated(
-      token => Ok(s"token=$token"), {
-        Redirect(authorizeUrl(routes.HomeController.authorize()))
-      }
+      token => Ok(s"token=$token"),
+      Redirect(authorizeUrl(routes.HomeController.authorize()))
     )
   }
 }

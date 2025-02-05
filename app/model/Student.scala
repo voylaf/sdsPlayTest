@@ -2,7 +2,7 @@ package model
 
 import org.bson.types.ObjectId
 import play.api.libs.json.Json.JsValueWrapper
-import play.api.libs.json.{Format, JsNumber, JsString, JsValue, Json, Reads, Writes}
+import play.api.libs.json.{JsNumber, JsString}
 
 /*
 Состав объекта студента:

@@ -16,15 +16,13 @@ final case class MongoDBActions(mongoClient: MongoClient) extends DBActions[Futu
   )
 
   def createDatabase(dbName: String): Future[MongoDatabase] =
-    Future(mongoClient.getDatabase(dbName).withCodecRegistry(codecRegistry))
+    this.getDatabase(dbName)
 
   def getDatabase(dbName: String): Future[MongoDatabase] =
     Future(mongoClient.getDatabase(dbName).withCodecRegistry(codecRegistry))
 
   def createCollection(collectionName: String, mongoDatabase: MongoDatabase): Future[Unit] =
     mongoDatabase.createCollection(collectionName).toFuture()
-
-  def auth(dbName: String): Future[Unit] = Future.unit
 }
 
 object MongoDBActions {

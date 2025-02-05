@@ -1,9 +1,0 @@
-curl --header "Content-Type:application/json" --request GET http://localhost:9000/students/get
-
-curl --header "Content-Type:application/json" --request PUT --data "{\"surname\":\"Smirnov\",\"name\":\"Sergey\",\"patronym\":\"Petrovich\",\"group\":\"c61\",\"avgScore\":4.12}" http://localhost:9000/students/add
-
-# Используется ид, полученный из второго запроса
-curl --header "Content-Type:application/json" --request POST --data "{\"avgScore\":4.18,\"group\":\"c62\"}" http://localhost:9000/students/update?id=67a06e3e9cc49b0290cbee6a
-
-# Используется ид, полученный из второго запроса
-curl --header "Content-Type:application/json" --request DELETE http://localhost:9000/students/delete?id=67a06e3e9cc49b0290cbee6a

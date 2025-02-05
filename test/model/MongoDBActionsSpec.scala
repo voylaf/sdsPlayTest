@@ -47,8 +47,8 @@ class MongoDBActionsSpec extends munit.FunSuite {
     val changes = StudentUpdate(group=Some("u99"), avgScore=Some(3.67))
     val student3 = Await.result(
       for {
-        _       <- studentActions.modifyStudentFields(students.head._id, changes)
-        student <- studentActions.findStudentById(students.head._id)
+        student       <- studentActions.modifyStudentFields(students.head._id, changes)
+//        student <- studentActions.findStudentById(students.head._id)
       } yield student,
       5.seconds
     )

@@ -24,13 +24,15 @@ final case class StudentActionsMongoDB(mongoDb: MongoDatabase, collectionName: S
       .recover(_ => None)
   }
 
-  def modifyStudentFields(studentId: Id, su: StudentUpdate): Future[Unit] = {
+  def modifyStudentFields(studentId: Id, su: StudentUpdate): Future[Option[Student]] = {
     val us      = su.updates.collect { case (k, v) if k != "_id" => Updates.set(k, v) }.toList
     val updates = Updates.combine(us: _*)
-    getStudentsCollection.flatMap(col =>
-      col.updateOne(equal("_id", studentId), updates).toFuture()
-    )
-  }.map(_ => ())
+    for {
+      collection <- getStudentsCollection
+      _ <- collection.updateOne(equal("_id", studentId), updates).toFuture()
+      student <- findStudentById(studentId)
+    } yield student
+  }
 
   def addStudent(student: Student): Future[Unit] = {
     getStudentsCollection.flatMap(_.insertOne(student).toFuture()).map(_ => ())

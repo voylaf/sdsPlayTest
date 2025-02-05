@@ -53,16 +53,15 @@ class HomeController @Inject() (val controllerComponents: ControllerComponents)(
   }
 
 //  3. Принимать запросы HTTP POST на изменения сущности объекта студента;
-  def addStudent(): Action[JsValue] = Action.async(parse.json) { implicit request =>
+  def addStudent(): Action[AnyContent] = Action.async { implicit request =>
     val dbFuture = mongoDBActions.getDatabase(mongoDatabaseName)
     val studentFuture = for {
-      student <- Future(Json.fromJson[Student](request.body).get)
+      student <- Future(Json.fromJson[Student](request.body.asJson.get).get)
       db      <- dbFuture
       _       <- StudentActionsMongoDB(db, config.get[String]("mongoCollection")).addStudent(student)
-    } yield student
+    } yield Ok(s"$student was added to the DB")
 
     studentFuture
-      .flatMap(student => Future.successful(Ok(s"$student was added to the DB")))
       .recover {
         case _: java.util.NoSuchElementException =>
           InternalServerError(s"Invalid data - student must have surname, name, patronym, avgScore, and group: ${request.body}")
@@ -71,16 +70,18 @@ class HomeController @Inject() (val controllerComponents: ControllerComponents)(
   }
 
 //  4. Принимать запросы HTTP PUT на добавление новой сущности студента;
-  def updateStudent(id: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
+  def updateStudent(id: String): Action[AnyContent] = Action.async { implicit request =>
     val dbFuture = mongoDBActions.getDatabase(mongoDatabaseName)
     val updateFuture = for {
-      update <- Future(Json.fromJson[StudentUpdate](request.body).get)
-      db     <- dbFuture
-      _      <- StudentActionsMongoDB(db, config.get[String]("mongoCollection")).modifyStudentFields(new ObjectId(id), update)
-    } yield update
+      update  <- Future(Json.fromJson[StudentUpdate](request.body.asJson.get).get)
+      db      <- dbFuture
+      student <- StudentActionsMongoDB(db, config.get[String]("mongoCollection")).modifyStudentFields(new ObjectId(id), update)
+    } yield student
     updateFuture
-      // todo: must return "wasn't updated" when student not found in the db
-      .flatMap(_ => Future.successful(Ok(s"Student with id=$id was successfully updated")))
+      .flatMap {
+        case Some(student) => Future.successful(Ok(s"Student ($student) was successfully updated"))
+        case None          => Future.successful(Ok(s"Student with id=$id wasn't found in the DB"))
+      }
       .recover {
         case e => InternalServerError(e.toString)
       }

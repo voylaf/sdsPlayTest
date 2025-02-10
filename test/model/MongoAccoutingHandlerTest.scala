@@ -1,6 +1,6 @@
 package model
 
-import model.Auth.{MongoAccountingHandler, User}
+import model.Auth.{UsersAccountingHandler, MongoAuthOps, User}
 import model.Auth.User.hashString
 import org.mongodb.scala.bson.ObjectId
 import org.mongodb.scala.model.Filters
@@ -12,23 +12,24 @@ import scala.concurrent.duration.Duration
 
 class MongoAccoutingHandlerTest extends munit.FunSuite {
   val mongoClient: MongoDBActions = MongoDBActions.fromConnectionString("mongodb://localhost:27017")
-  val mongoAccoutingHandler       = new MongoAccountingHandler("mongodb://localhost:27017", "TestEx", "Users")(60)
+  val mongoAuthOps = new MongoAuthOps("mongodb://localhost:27017", "TestEx", "Users")
+  val mongoAccoutingHandler       = new UsersAccountingHandler(mongoAuthOps, 60)
   val newId                       = new ObjectId()
   val password                    = "MyPassword"
   val user: User                  = User(newId, "Test", hashString(password))
   val authInfo: AuthInfo[User]    = AuthInfo(user = user, clientId = None, scope = None, redirectUri = None)
 
   override def beforeAll(): Unit = {
-    Await.result(mongoAccoutingHandler.addUser(user), Duration.Inf)
+    Await.result(mongoAuthOps.addUser(user), Duration.Inf)
   }
 
   override def afterAll(): Unit = {
-    Await.result(mongoAccoutingHandler.getUsersCollection.flatMap(_.drop().toFuture()), Duration.Inf)
+    Await.result(mongoAuthOps.getUsersCollection.flatMap(_.drop().toFuture()), Duration.Inf)
   }
 
   test("must add user") {
     for {
-      users <- mongoAccoutingHandler.getUsersCollection
+      users <- mongoAuthOps.getUsersCollection
       count <- users.countDocuments(
         Filters.equal("_id", newId)
       ).toFuture()
@@ -39,7 +40,7 @@ class MongoAccoutingHandlerTest extends munit.FunSuite {
 
   test("must find user") {
     for {
-      maybeUser <- mongoAccoutingHandler.findUserByNameAndPassword(user.name, password)
+      maybeUser <- mongoAuthOps.findUserByNameAndPassword(user.name, password)
     } yield {
       assert(maybeUser.nonEmpty)
       assertEquals(maybeUser.get, user)
@@ -49,8 +50,8 @@ class MongoAccoutingHandlerTest extends munit.FunSuite {
   test("must create access token") {
     for {
       accessToken <- mongoAccoutingHandler.createAccessToken(authInfo)
-      ur <- mongoAccoutingHandler.saveAccessToken(user, accessToken)
-      users <- mongoAccoutingHandler.getUsersCollection
+      ur <- mongoAuthOps.saveAccessToken(user, accessToken)
+      users <- mongoAuthOps.getUsersCollection
       count <- users.countDocuments(
         Filters.and(Filters.ne("accessToken", null), Filters.equal("_id", newId))
       ).toFuture()
@@ -62,9 +63,9 @@ class MongoAccoutingHandlerTest extends munit.FunSuite {
 
   test("must delete access token") {
     for {
-      accessToken <- mongoAccoutingHandler.getStoredAccessToken(authInfo)
-      dr <- mongoAccoutingHandler.deleteAccessToken(user)
-      deletedToken <- mongoAccoutingHandler.getStoredAccessToken(authInfo)
+      accessToken <- mongoAuthOps.getStoredAccessToken(authInfo)
+      dr <- mongoAuthOps.deleteAccessToken(user)
+      deletedToken <- mongoAuthOps.getStoredAccessToken(authInfo)
     } yield {
       assert(accessToken.nonEmpty)
       assert(deletedToken.isEmpty)

@@ -1,6 +1,6 @@
 package controllers
 
-import model.Auth.MongoAccountingHandler
+import model.Auth.{UsersAccountingHandler, MongoAuthOps}
 import play.api.Configuration
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 import scalaoauth2.provider.OAuth2Provider
@@ -13,12 +13,16 @@ class AuthController @Inject() (components: ControllerComponents)(config: Config
   override val tokenEndpoint = new MyTokenEndpoint()
 
   def accessToken(): Action[AnyContent] = Action.async { implicit request =>
+    val mongoAuthOps = new MongoAuthOps(
+      config.get[String]("mongoConnectionString"),
+      config.get[String]("mongoDatabase"),
+      config.get[String]("mongoUsersCollection")
+    )
     issueAccessToken(
-      new MongoAccountingHandler(
-        config.get[String]("mongoConnectionString"),
-        config.get[String]("mongoDatabase"),
-        config.get[String]("mongoUsersCollection")
-      )(config.get[Long]("tokenLifetimeSeconds"))
+      new UsersAccountingHandler(
+        mongoAuthOps,
+        config.get[Long]("tokenLifetimeSeconds")
+      )
     )
   }
 }

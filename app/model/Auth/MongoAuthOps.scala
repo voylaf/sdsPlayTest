@@ -59,4 +59,8 @@ class MongoAuthOps @Inject() (
         Updates.unset("accessToken")
       ).toFutureOption()
     ).map(_ => ())
+
+  def deleteUsersCollection(): Future[Unit] =
+    getUsersCollection.flatMap(_.drop().toFuture())
+
 }

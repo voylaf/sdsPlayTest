@@ -19,7 +19,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
   val config: Configuration = Configuration(ConfigFactory.load("application.conf"))
 
-  "HomeController GET" should {
+  "HomeController" should {
 
     "render the index page from a new instance of controller" in {
       val controller = new HomeController(stubControllerComponents())(config)(WsTestClient.withClient(ws => ws))

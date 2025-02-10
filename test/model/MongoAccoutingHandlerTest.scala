@@ -24,7 +24,7 @@ class MongoAccoutingHandlerTest extends munit.FunSuite {
   }
 
   override def afterAll(): Unit = {
-    Await.result(mongoAuthOps.getUsersCollection.flatMap(_.drop().toFuture()), Duration.Inf)
+    Await.result(mongoAuthOps.deleteUsersCollection(), Duration.Inf)
   }
 
   test("must add user") {

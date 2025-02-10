@@ -27,15 +27,14 @@ class UsersAccountingHandler(val OAuthOps: OAuthOps, tokenLifeSeconds: Long)(imp
   def createAccessToken(authInfo: AuthInfo[User]): Future[AccessToken] = {
     def randomString(length: Int) = new Random(new SecureRandom()).alphanumeric.take(length).mkString
     val createdAt                 = Date.from(java.time.Instant.now())
-    Future.successful(
-      AccessToken(
-        token = randomString(40),
-        refreshToken = Some(randomString(40)),
-        scope = None,
-        lifeSeconds = Some(tokenLifeSeconds),
-        createdAt = createdAt
-      )
+    val accessToken = AccessToken(
+      token = randomString(40),
+      refreshToken = Some(randomString(40)),
+      scope = None,
+      lifeSeconds = Some(tokenLifeSeconds),
+      createdAt = createdAt
     )
+    saveAccessToken(authInfo.user, accessToken).flatMap(_ => Future.successful(accessToken))
   }
 
   def deleteAccessToken(user: User): Future[Unit] = OAuthOps.deleteAccessToken(user)
@@ -76,5 +75,4 @@ class UsersAccountingHandler(val OAuthOps: OAuthOps, tokenLifeSeconds: Long)(imp
         )
       }
     }
-
 }

@@ -7,6 +7,8 @@
 
 Запустить сервис можно из sbt командой "run -Dconfig.resource=production.conf". Production.conf должен содержать параметры appClientId и appClientSecret, которые могут быть получены после регистрации приложения в github или у разработчика.
 
+curl --header "Content-Type:application/json" --request POST http://127.0.0.1:9000/oauth2/access_token
+
 Запрос http://127.0.0.1:9000/auth позволяет получить access_token, связанный с учетной записью github.
 
 ## Примеры запросов к сервису.

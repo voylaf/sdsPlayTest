@@ -1,4 +1,4 @@
-package model
+package model.Auth
 
 object OAuth {
   def makeUrl(endpoint: String, qs: (String, String)*): String = {

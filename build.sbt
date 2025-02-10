@@ -1,4 +1,4 @@
-ThisBuild / version := "1.0-SNAPSHOT"
+ThisBuild / version      := "1.0-SNAPSHOT"
 ThisBuild / scalaVersion := "2.13.16"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
@@ -8,9 +8,11 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala)
     libraryDependencies ++= List(
       guice,
       ws,
-      "org.mongodb.scala"      %% "mongo-scala-driver" % "5.3.1",
-      "org.scalatestplus.play" %% "scalatestplus-play" % "7.0.1" % Test,
-      "org.scalameta" %% "munit" % "1.1.0" % Test,
+      "org.mongodb.scala"      %% "mongo-scala-driver"    % "5.3.1",
+      "com.nulab-inc"          %% "scala-oauth2-core"     % "1.6.0",
+      "com.nulab-inc"          %% "play2-oauth2-provider" % "2.0.0",
+      "org.scalatestplus.play" %% "scalatestplus-play"    % "7.0.1" % Test,
+      "org.scalameta"          %% "munit"                 % "1.1.0" % Test
     )
   )
 

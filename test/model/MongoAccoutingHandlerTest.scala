@@ -1,6 +1,6 @@
 package model
 
-import model.Auth.{UsersAccountingHandler, MongoAuthOps, User}
+import model.Auth.{MongoAuthOps, User, UsersAccountingHandler}
 import model.Auth.User.hashString
 import org.mongodb.scala.bson.ObjectId
 import org.mongodb.scala.model.Filters
@@ -8,7 +8,7 @@ import scalaoauth2.provider.AuthInfo
 
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, DurationInt}
 
 class MongoAccoutingHandlerTest extends munit.FunSuite {
   val mongoClient: MongoDBActions = MongoDBActions.fromConnectionString("mongodb://localhost:27017")
@@ -24,7 +24,7 @@ class MongoAccoutingHandlerTest extends munit.FunSuite {
   }
 
   override def afterAll(): Unit = {
-    Await.result(mongoAuthOps.deleteUsersCollection(), Duration.Inf)
+    Await.result(mongoAuthOps.deleteUsersCollection(), 10.seconds)
   }
 
   test("must add user") {
@@ -58,6 +58,17 @@ class MongoAccoutingHandlerTest extends munit.FunSuite {
     } yield {
       assert(!accessToken.isExpired)
       assertEquals(count, 1L)
+    }
+  }
+
+  test("must find access token") {
+    for {
+      accessToken <- mongoAuthOps.getStoredAccessToken(authInfo)
+      accessToken2 <- mongoAccoutingHandler.findAccessToken(accessToken.get.token)
+    } yield {
+      assert(accessToken.nonEmpty)
+      assert(accessToken2.nonEmpty)
+      assert(accessToken == accessToken2)
     }
   }
 

@@ -3,6 +3,7 @@ package model.Auth
 import model.MongoDBActions
 import org.mongodb.scala.model.{Filters, Updates}
 import org.mongodb.scala.{MongoClient, MongoCollection, MongoDatabase}
+import play.api.Logging
 import scalaoauth2.provider.{AccessToken, AuthInfo}
 
 import javax.inject.{Inject, Singleton}
@@ -13,10 +14,8 @@ class MongoAuthOps @Inject() (
     connectionString: String,
     dbName: String,
     usersCollection: String
-)(
-    implicit ec: ExecutionContext
-) extends OAuthOps {
-  val mongoClient: MongoClient = MongoDBActions.clientFromConnectionString(connectionString)
+)(implicit ec: ExecutionContext) extends OAuthOps {
+  def mongoClient: MongoClient = MongoDBActions.clientFromConnectionString(connectionString)
 
   def getDatabase: Future[MongoDatabase] = MongoDBActions(mongoClient).getDatabase(dbName)
 
@@ -27,25 +26,33 @@ class MongoAuthOps @Inject() (
     _     <- users.insertOne(user).toFuture()
   } yield ()
 
-  def findUserByNameAndPassword(name: String, password: String): Future[Option[User]] =
+  def findUserByNameAndPassword(name: String, password: String): Future[Option[User]] = {
     for {
       users <- getUsersCollection
       user <- users.find(
         Filters.and(
-          Filters.equal("name", name),
-          Filters.equal("hashedPassword", User.hashString(password))
+          Filters.eq("name", name),
+          Filters.eq("hashedPassword", User.hashString(password))
         )
       ).first().toFutureOption()
     } yield user
+  }
 
-  def findUserByAccessToken(token: String): Future[Option[User]] =
-    getUsersCollection.flatMap(_.find(Filters.equal("accessToken", token)).first().toFutureOption())
+  def findUserByAccessToken(token: String): Future[Option[User]] = {
+    for {
+      users     <- getUsersCollection
+      maybeUser <- users.find(Filters.eq("accessToken.token", token)).first().toFutureOption()
+    } yield maybeUser
+  }
 
-  def getStoredAccessToken(authInfo: AuthInfo[User]): Future[Option[AccessToken]] =
-    getUsersCollection.flatMap(users =>
-      users.find(Filters.equal("_id", authInfo.user._id)).first().toFutureOption()
-        .map(opt => opt.flatMap(_.accessToken))
-    )
+  def getStoredAccessToken(authInfo: AuthInfo[User]): Future[Option[AccessToken]] = {
+    for {
+      users       <- getUsersCollection
+      maybeUser   <- users.find(Filters.eq("_id", authInfo.user._id)).first().toFutureOption()
+      user        <- Future(maybeUser.get)
+      accessToken <- Future(user.accessToken)
+    } yield accessToken
+  }
 
   def saveAccessToken(user: User, accessToken: AccessToken): Future[Unit] = for {
     users <- getUsersCollection
@@ -61,6 +68,6 @@ class MongoAuthOps @Inject() (
     ).map(_ => ())
 
   def deleteUsersCollection(): Future[Unit] =
-    getUsersCollection.flatMap(_.drop().toFuture())
+    getUsersCollection.flatMap { _.deleteMany(Filters.notEqual("name", "")).toFuture().map(_ => ()) }
 
 }

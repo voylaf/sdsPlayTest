@@ -6,11 +6,15 @@ import model.{Student, StudentUpdate}
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
 import play.api.Configuration
-import play.api.libs.json.Json
+import play.api.libs.json.{JsNull, JsString, Json}
 import play.api.test.Helpers._
 import play.api.test._
+import scalaoauth2.provider.{AuthHeader, ProtectedResource}
+import play.api.test.CSRFTokenHelper._
 
+import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
 
 /** Add your spec here. You can mock out a whole application including requests, plugins etc.
   *
@@ -22,7 +26,7 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
   "HomeController" should {
 
     "render the index page from a new instance of controller" in {
-      val controller = new HomeController(stubControllerComponents())(config)(WsTestClient.withClient(ws => ws))
+      val controller = new HomeController(stubControllerComponents())(config)
       val home       = controller.index().apply(FakeRequest(GET, "/"))
 
       status(home) mustBe OK
@@ -49,12 +53,26 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
     }
 
     "return added student" in {
+      val auth     = new AuthController(stubControllerComponents())(config)
+      val userData = List("username" -> "9Mfl6gyglQ", "password" -> "MyPassword", "grant_type" -> "password")
+      val tokenRequest = FakeRequest("POST", "/oauth2/auth")
+        .withFormUrlEncodedBody(userData: _*)
+      val tokenResponse = auth.accessToken().apply(tokenRequest)
+      println(contentAsString(tokenResponse))
+      val token = (contentAsJson(tokenResponse) \ "access_token").getOrElse(JsString("")).toString()
+      println(token)
+
       val student     = Student("Vasilyev", "Alexey", "Ignatyevich", "a6", 4.5)
       val studentJson = Json.toJson(student)
       val controller  = inject[HomeController]
-      val home        = controller.addStudent().apply(FakeRequest(PUT, "/students/add").withJsonBody(studentJson))
+      val request = FakeRequest(PUT, "/students/add")
+        .withHeaders("Authorization" -> s"Bearer $token")
+        .withJsonBody(studentJson)
 
-      println(contentAsString(home))
+      val home = route(app, request).get
+//      val home = controller.addStudent().apply(request)
+      println(headers(home))
+
       status(home) mustBe OK
       contentType(home) mustBe Some("text/plain")
       contentAsString(home) must include(student._id.toString)
@@ -64,7 +82,6 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
       val controller = inject[HomeController]
       val home       = controller.getStudentsList.apply(FakeRequest(GET, "/students/get"))
 
-      println(contentAsString(home))
       status(home) mustBe OK
       contentType(home) mustBe Some("text/plain")
       contentAsString(home) must include("Vasilyev")
@@ -83,7 +100,7 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
           .apply(FakeRequest(POST, s"/students/update/${studentOriginal._id}")
             .withJsonBody(studentJson))
       }
-      println(contentAsString(home))
+//      println(contentAsString(home))
       status(home) mustBe OK
       contentType(home) mustBe Some("text/plain")
       contentAsString(home) must include(studentOriginal._id.toString)
@@ -101,7 +118,7 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
           .apply(FakeRequest(DELETE, s"/students/delete/${studentOriginal._id}"))
       )
       val home2 = home.flatMap(_ => controller.getStudentsList.apply(FakeRequest(GET, "/students/get")))
-      println(contentAsString(home))
+//      println(contentAsString(home))
       status(home) mustBe OK
       contentType(home) mustBe Some("text/plain")
       contentAsString(home2) must not include studentOriginal._id.toString

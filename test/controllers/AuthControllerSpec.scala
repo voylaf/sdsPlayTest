@@ -13,27 +13,29 @@ import play.api.test.Helpers.{contentAsString, contentType, status, stubControll
 import play.api.test.{FakeRequest, Injecting}
 import org.scalatest.BeforeAndAfterAll
 import play.api.test.Helpers._
+import model.Auth.UserImpl._
 
 import scala.concurrent.Await
-import scala.concurrent.duration.Duration
-import scala.util.parsing.json.JSONObject
+import scala.concurrent.duration.{Duration, DurationInt}
+import scala.util.Random
 
 class AuthControllerSpec extends PlaySpec with BeforeAndAfterAll with GuiceOneAppPerTest with Injecting {
   val config: Configuration = Configuration(ConfigFactory.load("application.conf"))
   val newId                 = new ObjectId()
   val password              = "MyPassword"
-  val user: User            = User(newId, "Test", hashString(password))
+  val user: User            = User(newId, new Random().alphanumeric.take(10).mkString, hashString(password))
   val controller            = new AuthController(stubControllerComponents())(config)
 
   override def beforeAll(): Unit = {
     Await.result(controller.usersAccountingHandler.addUser(user), Duration.Inf)
   }
 
-//  override def afterAll(): Unit = {
-//    Await.result(controller.mongoAuthOps.getUsersCollection.flatMap(_.drop().toFuture()), Duration.Inf)
-//  }
+  override def afterAll(): Unit = {
+    Await.result(controller.mongoAuthOps.deleteUsersCollection(), 10.seconds)
+  }
 
   "AuthController" should {
+    var token: JsValue = null
 
     "create access token and return it" in {
       val data     = List(("username", user.name), ("password", password), ("grant_type", "password"))
@@ -43,7 +45,7 @@ class AuthControllerSpec extends PlaySpec with BeforeAndAfterAll with GuiceOneAp
       println(contentAsString(response))
       status(response) mustBe OK
       contentType(response) mustBe Some("application/json")
-      val token = contentAsJson(response)
+      token = contentAsJson(response)
       assert((token \ "access_token").toOption.nonEmpty)
       assert((token \ "expires_in").toOption.nonEmpty)
       assert((token \ "refresh_token").toOption.nonEmpty)

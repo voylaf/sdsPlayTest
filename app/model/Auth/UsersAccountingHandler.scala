@@ -37,7 +37,8 @@ class UsersAccountingHandler(val OAuthOps: OAuthOps, tokenLifeSeconds: Long)(imp
     saveAccessToken(authInfo.user, accessToken).flatMap(_ => Future.successful(accessToken))
   }
 
-  def deleteAccessToken(user: User): Future[Unit] = OAuthOps.deleteAccessToken(user)
+  def deleteAccessToken(user: User): Future[Unit] =
+    OAuthOps.deleteAccessToken(user)
 
   def getStoredAccessToken(authInfo: AuthInfo[User]): Future[Option[AccessToken]] =
     OAuthOps.getStoredAccessToken(authInfo)
@@ -56,16 +57,16 @@ class UsersAccountingHandler(val OAuthOps: OAuthOps, tokenLifeSeconds: Long)(imp
     Future.successful(throw new NotImplementedError())
 
   def deleteAuthCode(code: String): Future[Unit] =
-    Future(throw new NotImplementedError())
+    Future.successful(throw new NotImplementedError())
 
   def findAccessToken(token: String): Future[Option[AccessToken]] =
-    findUserByAccessToken(token).map(_.flatMap(_.accessToken))
+    findUserByToken(token).map(maybeUser => maybeUser.flatMap(_.accessToken))
 
-  def findUserByAccessToken(token: String): Future[Option[User]] =
+  def findUserByToken(token: String): Future[Option[User]] =
     OAuthOps.findUserByAccessToken(token)
 
   def findAuthInfoByAccessToken(accessToken: AccessToken): Future[Option[AuthInfo[User]]] =
-    findUserByAccessToken(accessToken.token).map { opt =>
+    findUserByToken(accessToken.token).map { opt =>
       opt.map { user =>
         AuthInfo[User](
           user = user,

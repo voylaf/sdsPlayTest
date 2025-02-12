@@ -7,6 +7,10 @@ import javax.inject.Singleton
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
+/*
+Класс, реализующий основные операции для создания, сохранения, получения OAuth2-токенов.
+Подробнее на https://github.com/nulab/scala-oauth2-provider
+ */
 @Singleton
 class UsersAccountingHandler(val OAuthOps: OAuthOps, tokenLifeSeconds: Long)(implicit ec: ExecutionContext) extends DataHandler[User] {
 

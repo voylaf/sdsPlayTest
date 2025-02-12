@@ -9,17 +9,8 @@ import play.api.Configuration
 import play.api.libs.json.{JsNull, JsString, Json}
 import play.api.test.Helpers._
 import play.api.test._
-import scalaoauth2.provider.{AuthHeader, ProtectedResource}
-import play.api.test.CSRFTokenHelper._
-
-import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.Duration
 
-/** Add your spec here. You can mock out a whole application including requests, plugins etc.
-  *
-  * For more information, see https://www.playframework.com/documentation/latest/ScalaTestingWithScalaTest
-  */
 class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
   val config: Configuration = Configuration(ConfigFactory.load("application.conf"))
 
@@ -70,12 +61,24 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
         .withJsonBody(studentJson)
 
       val home = route(app, request).get
-//      val home = controller.addStudent().apply(request)
       println(headers(home))
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/plain")
       contentAsString(home) must include(student._id.toString)
+    }
+
+    "not add student without authorization" in {
+      val student     = Student("Vasilyev", "Alexey", "Ignatyevich", "a6", 4.5)
+      val studentJson = Json.toJson(student)
+      val controller  = inject[HomeController]
+      val request = FakeRequest(PUT, "/students/add")
+        .withHeaders("Authorization" -> s"Bearer salfjaosifjoasijd")
+        .withJsonBody(studentJson)
+
+      val home = route(app, request).get
+
+      status(home) mustBe UNAUTHORIZED
     }
 
     "return students" in {
@@ -100,7 +103,6 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
           .apply(FakeRequest(POST, s"/students/update/${studentOriginal._id}")
             .withJsonBody(studentJson))
       }
-//      println(contentAsString(home))
       status(home) mustBe OK
       contentType(home) mustBe Some("text/plain")
       contentAsString(home) must include(studentOriginal._id.toString)
@@ -118,7 +120,6 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
           .apply(FakeRequest(DELETE, s"/students/delete/${studentOriginal._id}"))
       )
       val home2 = home.flatMap(_ => controller.getStudentsList.apply(FakeRequest(GET, "/students/get")))
-//      println(contentAsString(home))
       status(home) mustBe OK
       contentType(home) mustBe Some("text/plain")
       contentAsString(home2) must not include studentOriginal._id.toString

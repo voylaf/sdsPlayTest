@@ -6,10 +6,9 @@ import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponent
 import scalaoauth2.provider.OAuth2Provider
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
 
-class AuthController @Inject() (components: ControllerComponents)(config: Configuration)
+class AuthController @Inject() (components: ControllerComponents)(config: Configuration)(implicit ec: ExecutionContext)
     extends AbstractController(components) with OAuth2Provider {
   override val tokenEndpoint = new MyTokenEndpoint()
 

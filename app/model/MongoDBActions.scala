@@ -7,10 +7,9 @@ import org.mongodb.scala.bson.codecs.Macros._
 import org.mongodb.scala.{ConnectionString, MongoClient, MongoClientSettings, MongoDatabase}
 import scalaoauth2.provider.AccessToken
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-final case class MongoDBActions(mongoClient: MongoClient) extends DBActions[Future, MongoDatabase] {
+final case class MongoDBActions(mongoClient: MongoClient)(implicit ec: ExecutionContext) extends DBActions[Future, MongoDatabase] {
 
   private val codecRegistry = fromRegistries(
     fromProviders(classOf[Student], classOf[StudentUpdate], classOf[User], classOf[AccessToken]),
@@ -35,6 +34,6 @@ object MongoDBActions {
       .build()
     MongoClient(settings)
   }
-  def fromConnectionString(connectionString: String): MongoDBActions =
+  def fromConnectionString(connectionString: String)(implicit ec: ExecutionContext): MongoDBActions =
     MongoDBActions(clientFromConnectionString(connectionString))
 }

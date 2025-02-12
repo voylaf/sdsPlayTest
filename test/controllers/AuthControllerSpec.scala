@@ -13,9 +13,9 @@ import play.api.test.Helpers.{contentAsString, contentType, status, stubControll
 import play.api.test.{FakeRequest, Injecting}
 import org.scalatest.BeforeAndAfterAll
 import play.api.test.Helpers._
-import model.Auth.UserImpl._
 
 import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.util.Random
 

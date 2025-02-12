@@ -6,21 +6,18 @@ import model._
 import org.bson.types.ObjectId
 import play.api._
 import play.api.libs.json._
-import play.api.libs.ws.WSClient
 import play.api.mvc._
-import play.mvc.Call
 import scalaoauth2.provider.OAuth2Provider
 
 import javax.inject._
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.util.Random.alphanumeric
+import scala.concurrent.{ExecutionContext, Future}
 
 /** This controller creates an `Action` to handle HTTP requests to the application's home page.
   */
 @Singleton
 class HomeController @Inject() (val controllerComponents: ControllerComponents)(config: Configuration)
     extends BaseController with OAuth2Provider {
+  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
 
   /** Create an Action to render an HTML page.
     *

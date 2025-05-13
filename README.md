@@ -11,7 +11,7 @@ For authentication, run the service with your username and password already save
 Example:
 curl --header "Content-Type:application/json" --request POST --data "{\"username\": \"*yourUsername*\", \"password\": \"*yourPassword*\", \"grant_type\": \"password\"}" http://127.0.0.1:9000/oauth2/auth
 
-## Примеры запросов к сервису.
+## Examples of Service Requests
 
 1) To retrieve the list of students:
 curl --header "Content-Type:application/json" --request GET http://127.0.0.1:9000/students/get

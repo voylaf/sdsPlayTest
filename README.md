@@ -1,25 +1,26 @@
-# Небольшой REST-сервис для взаимодействия с информацией в MongoDB с помощью Play3.
+# A Small REST Service example for Interacting with MongoDB Information Using Play3
 
-## Условия запуска
-Необходима установленная версия Java 21 и доступ к MongoDB.
+## Startup Requirements
+A pre-installed version of Java 21 and access to MongoDB are required.
 
-Если нужно, поменять настройки доступа к базе данных можно в /conf/application.conf.
+If necessary, you can change the database access settings in /conf/application.conf.
 
-Запустить сервис можно из sbt командой run.
+The service can be started using the sbt command run.
 
-Для авторизации необходимо запустить с вашими логином и паролем, уже сохраненными в базе.
+For authentication, run the service with your username and password already saved in the database.
+Example:
 curl --header "Content-Type:application/json" --request POST --data "{\"username\": \"*yourUsername*\", \"password\": \"*yourPassword*\", \"grant_type\": \"password\"}" http://127.0.0.1:9000/oauth2/auth
 
 ## Примеры запросов к сервису.
 
-1) Получить список студентов:
+1) To retrieve the list of students:
 curl --header "Content-Type:application/json" --request GET http://127.0.0.1:9000/students/get
 
-2) Добавить студента в базу:
+2) To add a student to the database:
 curl --header "Content-Type:application/json" --header "Authorization: Bearer *pasteYourToken*" --request PUT --data "{\"surname\":\"Smirnov\",\"name\":\"Sergey\",\"patronym\":\"Petrovich\",\"group\":\"c61\",\"avgScore\":4.12}" http://127.0.0.1:9000/students/add
 
-3) Изменить сущность студента (*Используется ид, полученный из второго запроса или уже существующий студент*):
+3) To update a student's record (Use the id obtained from the second request or an existing student):
 curl --header "Content-Type:application/json" --header "Authorization: Bearer *pasteYourToken*" --request POST --data "{\"avgScore\":4.18,\"group\":\"c62\"}" http://127.0.0.1:9000/students/update?id=pasteYourId
 
-4) Удалить студента из базы (*Используется ид, полученный из второго запроса или уже существующий студент*):
+4) To delete a student from the database (Use the id obtained from the second request or an existing student):
 curl --header "Content-Type:application/json" --header "Authorization: Bearer *pasteYourToken*" --request DELETE http://127.0.0.1:9000/students/delete?id=pasteYourId
